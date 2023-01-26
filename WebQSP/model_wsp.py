@@ -5,7 +5,7 @@ from transformers import AutoModel
 from transformers import RobertaModel, BertModel
 
 
-class GCF(nn.Module):
+class GFC(nn.Module):
     def __init__(self, args, ent2id, rel2id, triples):
         super().__init__()
         self.args = args

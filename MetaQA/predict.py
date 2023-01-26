@@ -7,7 +7,7 @@ from tqdm import tqdm
 from collections import defaultdict
 from utils.misc import MetricLogger, load_glove, idx_to_one_hot
 from .data import DataLoader
-from .model_metaqa import GCF
+from .model_metaqa import GFC
 
 from IPython import embed
 

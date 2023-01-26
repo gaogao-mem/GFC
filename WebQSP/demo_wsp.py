@@ -18,7 +18,7 @@ import time
 from utils.misc import MetricLogger, batch_device, RAdam
 from utils.lr_scheduler import get_linear_schedule_with_warmup
 from WebQSP.data_hop_final import load_data
-from WebQSP.model_wsp import GCF
+from WebQSP.model_wsp import GFC
 import logging
 from collections import defaultdict
 from IPython import embed
@@ -31,17 +31,17 @@ torch.set_num_threads(1)  # avoid using multiple cpus
 
 import setproctitle
 
-setproctitle.setproctitle("GCF_demo") 
+setproctitle.setproctitle("GFC_demo") 
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/YourPath/GCF'
+    path_abs = '/YourPath/GFC'
     input_dir = path_abs + '/' + args.input_dir
-    args.ckpt = '/YourPath/GCF/checkpoints/WebQSP/model_wqsp.pt'
+    args.ckpt = '/YourPath/GFC/checkpoints/WebQSP/model_wqsp.pt'
     print(input_dir)
     ent2id, rel2id, triples, train_loader, val_loader = load_data(input_dir, args.bert_name, args.batch_size)
     logging.info("Create model.........")
-    model = GCF(args, ent2id, rel2id, triples)
+    model = GFC(args, ent2id, rel2id, triples)
     if not args.ckpt == None:
         model.load_state_dict(torch.load(args.ckpt))
     model = model.to(device)

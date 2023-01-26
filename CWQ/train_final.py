@@ -14,7 +14,7 @@ import argparse
 import numpy as np
 from utils.misc import MetricLogger, batch_device
 from CWQ.data import load_data
-from CWQ.model_cwq import GCF
+from CWQ.model_cwq import GFC
 from CWQ.predict import validate
 from transformers import AdamW  # , get_linear_schedule_with_warmup
 from utils.lr_scheduler import get_linear_schedule_with_warmup
@@ -27,16 +27,16 @@ torch.set_num_threads(1) # avoid using multiple cpus
 
 import setproctitle
 
-setproctitle.setproctitle("GCF_CWQ")
+setproctitle.setproctitle("GFC_CWQ")
 
 
 def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/YourPath/GCF'
+    path_abs = '/YourPath/GFC'
     args.input_dir = path_abs + '/' + args.input_dir
     ent2id, rel2id, train_loader, val_loader, test_loader = load_data(args.input_dir, args.bert_name, args.batch_size, args.rev)
     logging.info("Create model.........")
-    model = GCF(args, ent2id, rel2id)
+    model = GFC(args, ent2id, rel2id)
     if not args.ckpt == None:
         model.load_state_dict(torch.load(args.ckpt))
     model = model.to(device)

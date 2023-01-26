@@ -18,7 +18,7 @@ import time
 from utils.misc import MetricLogger, batch_device, RAdam
 from utils.lr_scheduler import get_linear_schedule_with_warmup
 from WebQSP_half.data_half_hop import load_data
-from WebQSP_half.model_wsp_half import GCF
+from WebQSP_half.model_wsp_half import GFC
 import logging
 from collections import defaultdict
 from IPython import embed
@@ -31,17 +31,17 @@ torch.set_num_threads(1)  # avoid using multiple cpus
 
 import setproctitle
 
-setproctitle.setproctitle("GCF_half_demo") 
+setproctitle.setproctitle("GFC_half_demo") 
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/YourPath/GCF'
+    path_abs = '/YourPath/GFC'
     input_dir = path_abs + '/' + args.input_dir
     args.ckpt = path_abs + '/' + args.ckpt
     print(input_dir)
     ent2id, rel2id, triples, train_loader, val_loader = load_data(input_dir, args.bert_name, args.batch_size)
     logging.info("Create model.........")
-    model = GCF(args, ent2id, rel2id, triples)
+    model = GFC(args, ent2id, rel2id, triples)
     if not args.ckpt == None:
         model.load_state_dict(torch.load(args.ckpt))
     model = model.to(device)

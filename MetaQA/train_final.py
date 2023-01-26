@@ -17,7 +17,7 @@ from tqdm import tqdm
 import time
 from utils.misc import MetricLogger, load_glove, idx_to_one_hot, RAdam
 from MetaQA.data import DataLoader
-from MetaQA.model_metaqa import GCF
+from MetaQA.model_metaqa import GFC
 from MetaQA.predict import validate
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s')
@@ -25,7 +25,7 @@ logFormatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
 rootLogger = logging.getLogger()
 
 import setproctitle
-setproctitle.setproctitle("GCF_MetaQA")
+setproctitle.setproctitle("GFC_MetaQA")
 
 torch.set_num_threads(1) # avoid using multiple cpus
 
@@ -33,7 +33,7 @@ def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.input_dir = path_abs + '/' + args.input_dir
     # args.glove_pt = path_abs + '/' + args.glove_pt
-    args.glove_pt = '/YourPath/GCF/data/glove/glove.840B.300d.pickle'
+    args.glove_pt = '/YourPath/GFC/data/glove/glove.840B.300d.pickle'
     if 'half' in args.input_dir:
         logging.info('Running on half kb')
 
@@ -49,7 +49,7 @@ def train(args):
 
     logging.info("Create model.........")
     pretrained = load_glove(args.glove_pt, vocab['id2word'])
-    model = GCF(args, args.dim_word, args.dim_hidden, vocab)
+    model = GFC(args, args.dim_word, args.dim_hidden, vocab)
     model.word_embeddings.weight.data = torch.Tensor(pretrained) 
     if not args.ckpt == None:
         missing, unexpected = model.load_state_dict(torch.load(args.ckpt), strict=False) 
@@ -126,7 +126,7 @@ def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.input_dir = path_abs + '/' + args.input_dir
     # args.glove_pt = path_abs + '/' + args.glove_pt
-    args.glove_pt = '/YourPath/GCF/data/glove/glove.840B.300d.pickle'
+    args.glove_pt = '/YourPath/GFC/data/glove/glove.840B.300d.pickle'
     if 'half' in args.input_dir:
         logging.info('Running on half kb')
 
@@ -142,7 +142,7 @@ def test(args):
 
     logging.info("Create model.........")
     pretrained = load_glove(args.glove_pt, vocab['id2word'])
-    model = GCF(args, args.dim_word, args.dim_hidden, vocab)
+    model = GFC(args, args.dim_word, args.dim_hidden, vocab)
     model.word_embeddings.weight.data = torch.Tensor(pretrained)
     if not args.ckpt == None:
         missing, unexpected = model.load_state_dict(torch.load(args.ckpt), strict=False) 

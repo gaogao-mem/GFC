@@ -5,7 +5,7 @@ import math
 from utils.BiGRU import GRU, BiGRU
 from .Knowledge_graph import KnowledgeGraph
 
-class GCF(nn.Module):
+class GFC(nn.Module):
     def __init__(self, args, dim_word, dim_hidden, vocab):
         super().__init__()
         self.args = args

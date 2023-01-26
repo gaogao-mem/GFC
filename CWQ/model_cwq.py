@@ -5,7 +5,7 @@ import math
 from transformers import RobertaModel, BertModel
 
 
-class GCF(nn.Module):
+class GFC(nn.Module):
     def __init__(self, args, ent2id, rel2id):
         super().__init__()
         num_relations = len(rel2id)
