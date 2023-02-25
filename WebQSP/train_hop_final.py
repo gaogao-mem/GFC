@@ -31,7 +31,7 @@ torch.set_num_threads(1)  # avoid using multiple cpus
 
 import setproctitle
 
-setproctitle.setproctitle("GCF_WSP")
+setproctitle.setproctitle("GFC_WSP")
 
 
 def train(args):
