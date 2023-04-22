@@ -118,3 +118,5 @@ TransferNet: An Effective and Transparent Framework for Multi-hop Question Answe
 https://github.com/shijx12/TransferNet
 ```
 Many thanks to the authors and developers!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Xie-Minghui/GFC&type=Timeline)](https://star-history.com/#Xie-Minghui/GFC&Date)
