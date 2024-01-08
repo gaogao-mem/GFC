@@ -36,6 +36,7 @@ setproctitle.setproctitle("GFC_WSP")
 
 def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(device)
     path_abs = '/home/amax/gaodan/GFC'
     input_dir = path_abs + '/' + args.input_dir
     # input_dir = args.input_dir
@@ -118,13 +119,13 @@ def train(args):
                         lr=optimizer.param_groups[2]["lr"],
                     )
                 )
-        if (epoch + 1) % 1 == 0:
+        if epoch % 5 == 0:
             acc, acc_hop, acc_hop_att, f1 = validate(args, model, val_loader, device)
             logging.info(acc_hop)
             logging.info(acc)
             logging.info(acc_hop_att)
             logging.info(f1)
-            # torch.save(model.state_dict(), os.path.join(args.save_dir, 'model-{}-{:.4f}.pt'.format(epoch, acc)))
+            torch.save(model.state_dict(), os.path.join(args.save_dir, 'model-{}-{:.4f}.pt'.format(epoch, acc)))
 
 # python train_hop_final.py --input_dir data/WebQSP --save_dir checkpoints/WebQSP
 def main():
