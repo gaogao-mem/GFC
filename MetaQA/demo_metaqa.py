@@ -31,11 +31,11 @@ torch.set_num_threads(1) # avoid using multiple cpus
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/YourPath/GFC'
+    path_abs = '/home/amax/gaodan/GFC'
     args.input_dir = path_abs + '/' + args.input_dir
     # args.glove_pt = path_abs + '/' + args.glove_pt
     args.ckpt = path_abs + '/' + args.ckpt
-    args.glove_pt = '/YourPath/GFC/data/glove/glove.840B.300d.pickle'
+    args.glove_pt = '/home/amax/gaodan/GFC/data/glove/glove.840B.300d.pickle'
     if 'half' in args.input_dir:
         logging.info('Running on half kb')
 

@@ -31,7 +31,7 @@ setproctitle.setproctitle("GFC_CWQ")
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/YourPath/GFC'
+    path_abs = '/home/amax/gaodan/GFC'
     args.input_dir = path_abs + '/' + args.input_dir
     args.ckpt = path_abs + '/' + args.ckpt
     ent2id, rel2id, train_loader, val_loader, test_loader = load_data(args.input_dir, args.bert_name, args.batch_size, args.rev)

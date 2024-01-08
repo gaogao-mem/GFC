@@ -35,7 +35,7 @@ setproctitle.setproctitle("GFC_half_demo")
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/YourPath/GFC'
+    path_abs = '/home/amax/gaodan/GFC'
     input_dir = path_abs + '/' + args.input_dir
     args.ckpt = path_abs + '/' + args.ckpt
     print(input_dir)

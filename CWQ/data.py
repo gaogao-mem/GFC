@@ -51,9 +51,9 @@ class DataLoader(torch.utils.data.DataLoader):
         # self.tokenizer = AutoTokenizer.from_pretrained(bert_name)
         try:
             if bert_name == "bert-base-uncased":
-                self.tokenizer = BertTokenizer.from_pretrained('/YourPath/bert-base-uncased')
+                self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
             elif bert_name == "roberta-base":
-                self.tokenizer = RobertaTokenizer.from_pretrained('/YourPath/roberta-base')
+                self.tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
             else:
                 raise ValueError("please input the right name of pretrained model")
         except ValueError as e:
