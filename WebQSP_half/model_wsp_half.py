@@ -24,9 +24,9 @@ class GFC(nn.Module):
         print('triple size: {}'.format(Tsize))
         try:
             if args.bert_name == "bert-base-uncased":
-                self.bert_encoder = BertModel.from_pretrained('bert-base-uncased')
+                self.bert_encoder = BertModel.from_pretrained('/home/amax/gaodan/models/bert-base-uncased')
             elif args.bert_name == "roberta-base":
-                self.bert_encoder = RobertaModel.from_pretrained('roberta-base')
+                self.bert_encoder = RobertaModel.from_pretrained('/home/amax/gaodan/models/roberta-base')
             else:
                 raise ValueError("please input the right name of pretrained model")
         except ValueError as e:
