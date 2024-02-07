@@ -35,11 +35,10 @@ setproctitle.setproctitle("GFC_demo")
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/home/amax/gaodan/GFC'
-    input_dir = path_abs + '/' + args.input_dir
-    args.ckpt = '/home/amax/gaodan/GFC/checkpoints/WebQSP/model_wqsp.pt'
-    print(input_dir)
-    ent2id, rel2id, triples, train_loader, val_loader = load_data(input_dir, args.bert_name, args.batch_size)
+    args.input_dir = '/root/autodl-tmp/GFC/data/WebQSP'
+    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP'
+    args.ckpt = os.path.join(path_abs, args.ckpt)
+    ent2id, rel2id, triples, train_loader, val_loader = load_data(args.input_dir, args.bert_name, args.batch_size)
     logging.info("Create model.........")
     model = GFC(args, ent2id, rel2id, triples)
     if not args.ckpt == None:
@@ -182,7 +181,7 @@ def validate(args, model, data, device, verbose=False, thresholds=0.985):
 
     return acc, acc_hop, acc_hop_att, f1_info
 
-# python demo.py --input_dir data/WebQSP --save_dir checkpoints/WebQSP_test --ckpt model_wqsp.pt
+# python demo.py --save_dir origin --ckpt model_wqsp.pt
 
 def main():
     parser = argparse.ArgumentParser()
@@ -204,9 +203,11 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
+    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP'
+    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+    args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_test')
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.log_name = time_ + '_{}_{}_{}.log'.format(args.opt, args.lr, args.batch_size)
     fileHandler = logging.FileHandler(os.path.join(args.save_dir, args.log_name))
     fileHandler.setFormatter(logFormatter)

@@ -31,11 +31,10 @@ torch.set_num_threads(1) # avoid using multiple cpus
 
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/home/amax/gaodan/GFC'
-    args.input_dir = path_abs + '/' + args.input_dir
-    # args.glove_pt = path_abs + '/' + args.glove_pt
-    args.ckpt = path_abs + '/' + args.ckpt
-    args.glove_pt = '/home/amax/gaodan/GFC/data/glove/glove.840B.300d.pickle'
+    args.input_dir = '/root/autodl-tmp/GFC/data/MetaQA'
+    path_abs = '/root/autodl-tmp/GFC/checkpoints/MetaQA'
+    args.ckpt = os.path.join(path_abs, args.ckpt)
+    args.glove_pt = '/root/autodl-tmp/GFC/data/glove/glove.840B.300d.pickle'
     if 'half' in args.input_dir:
         logging.info('Running on half kb')
 
@@ -93,9 +92,11 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
+    path_abs = '/root/autodl-tmp/GFC/checkpoints/MetaQA'
+    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+    args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_test')
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.log_name = time_ + '_{}_{}_{}.log'.format(args.opt, args.lr, args.batch_size)
     fileHandler = logging.FileHandler(os.path.join(args.save_dir, args.log_name))
     fileHandler.setFormatter(logFormatter)

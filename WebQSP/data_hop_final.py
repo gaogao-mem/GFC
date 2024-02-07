@@ -48,9 +48,9 @@ class DataLoader(torch.utils.data.DataLoader):
         print('Reading questions from {}'.format(fn))
         try:
             if bert_name == "bert-base-uncased":
-                self.tokenizer = BertTokenizer.from_pretrained('/home/amax/gaodan/models/bert-base-uncased')
+                self.tokenizer = BertTokenizer.from_pretrained('/root/autodl-tmp/GFC/models/bert-base-uncased')
             elif bert_name == "roberta-base":
-                self.tokenizer = RobertaTokenizer.from_pretrained('/home/amax/gaodan/models/roberta-base')
+                self.tokenizer = RobertaTokenizer.from_pretrained('/root/autodl-tmp/GFC/models/roberta-base')
             else:
                 raise ValueError("please input the right name of pretrained model")
         except ValueError as e:

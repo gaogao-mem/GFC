@@ -1,6 +1,4 @@
 import os
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID" 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import sys
 # sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__)))) 
 sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '../'))) 
@@ -37,11 +35,8 @@ setproctitle.setproctitle("GFC_WSP")
 def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    path_abs = '/home/amax/gaodan/GFC'
-    input_dir = path_abs + '/' + args.input_dir
-    # input_dir = args.input_dir
-    print(input_dir)
-    ent2id, rel2id, triples, train_loader, val_loader = load_data(input_dir, args.bert_name, args.batch_size)
+    args.input_dir = '/root/autodl-tmp/GFC/data/WebQSP'
+    ent2id, rel2id, triples, train_loader, val_loader = load_data(args.input_dir, args.bert_name, args.batch_size)
     logging.info("Create model.........")
     model = GFC(args, ent2id, rel2id, triples)
     if not args.ckpt == None:
@@ -127,18 +122,18 @@ def train(args):
             logging.info(f1)
             torch.save(model.state_dict(), os.path.join(args.save_dir, 'model-{}-{:.4f}.pt'.format(epoch, acc)))
 
-# python train_hop_final.py --input_dir data/WebQSP --save_dir checkpoints/WebQSP
+# python train_hop_final.py --save_dir origin
 def main():
     parser = argparse.ArgumentParser()
     # input and output
-    parser.add_argument('--input_dir', required=True, help='path to the data')
+    parser.add_argument('--input_dir', required=False, help='path to the data')
     parser.add_argument('--save_dir', required=True, help='path to save checkpoints and logs')
     parser.add_argument('--ckpt', default=None)
     # training parameters
     parser.add_argument('--bert_lr', default=3e-5, type=float)
     parser.add_argument('--lr', default=0.001, type=float)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
-    parser.add_argument('--num_epoch', default=60, type=int)
+    parser.add_argument('--num_epoch', default=81, type=int)
     parser.add_argument('--batch_size', default=16, type=int)
     parser.add_argument('--seed', type=int, default=444, help='random seed')
     parser.add_argument('--opt', default='radam', type=str)
@@ -150,9 +145,11 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
+    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP'
+    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+    args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_train')
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.log_name = time_ + '_{}_{}_{}.log'.format(args.opt, args.lr, args.batch_size)
     fileHandler = logging.FileHandler(os.path.join(args.save_dir, args.log_name))
     fileHandler.setFormatter(logFormatter)

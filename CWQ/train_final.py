@@ -32,8 +32,7 @@ setproctitle.setproctitle("GFC_CWQ")
 
 def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    path_abs = '/home/amax/gaodan/GFC'
-    args.input_dir = path_abs + '/' + args.input_dir
+    args.input_dir = '/root/autodl-tmp/GFC/data/CWQ'
     ent2id, rel2id, train_loader, val_loader, test_loader = load_data(args.input_dir, args.bert_name, args.batch_size, args.rev)
     logging.info("Create model.........")
     model = GFC(args, ent2id, rel2id)
@@ -108,7 +107,7 @@ def train(args):
             logging.info('val acc: {:.4f}, test acc: {:.4f}'.format(val_acc, test_acc))
             # torch.save(model.state_dict(), os.path.join(args.save_dir, 'model-{}-{:.4f}.pt'.format(epoch, val_acc)))
 
-# python train_final.py --input_dir data/CWQ --save_dir checkpoints/CWQ --rev
+# python train_final.py --save_dir origin --rev
 def main():
     parser = argparse.ArgumentParser()
     # input and output
@@ -132,9 +131,11 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
+    path_abs = '/root/autodl-tmp/GFC/checkpoints/CWQ'
+    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
+    args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_train')
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
-    time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.log_name = time_ + '_{}_{}_{}.log'.format(args.opt, args.lr, args.batch_size)
     fileHandler = logging.FileHandler(os.path.join(args.save_dir, args.log_name))
     # fileHandler = logging.FileHandler(os.path.join(args.save_dir, 'log.txt'))

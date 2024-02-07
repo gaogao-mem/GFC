@@ -15,9 +15,9 @@ class GFC(nn.Module):
 
         try:
             if args.bert_name == "bert-base-uncased":
-                self.bert_encoder = BertModel.from_pretrained('/home/amax/gaodan/models/bert-base-uncased')
+                self.bert_encoder = BertModel.from_pretrained('/root/autodl-tmp/GFC/models/bert-base-uncased')
             elif args.bert_name == "roberta-base":
-                self.bert_encoder = RobertaModel.from_pretrained('/home/amax/gaodan/models/roberta-base')
+                self.bert_encoder = RobertaModel.from_pretrained('/root/autodl-tmp/GFC/models/roberta-base')
             else:
                 raise ValueError("please input the right name of pretrained model")
         except ValueError as e:
