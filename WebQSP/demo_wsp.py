@@ -36,7 +36,7 @@ setproctitle.setproctitle("GFC_demo")
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.input_dir = '/root/autodl-tmp/GFC/data/WebQSP'
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/WebQSP'
     args.ckpt = os.path.join(path_abs, args.ckpt)
     ent2id, rel2id, triples, train_loader, val_loader = load_data(args.input_dir, args.bert_name, args.batch_size)
     logging.info("Create model.........")
@@ -203,7 +203,7 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/WebQSP'
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_test')
     if not os.path.exists(args.save_dir):

@@ -32,7 +32,7 @@ torch.set_num_threads(1) # avoid using multiple cpus
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.input_dir = '/root/autodl-tmp/GFC/data/MetaQA'
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/MetaQA'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/MetaQA'
     args.ckpt = os.path.join(path_abs, args.ckpt)
     args.glove_pt = '/root/autodl-tmp/GFC/data/glove/glove.840B.300d.pickle'
     if 'half' in args.input_dir:
@@ -75,7 +75,7 @@ def main():
     parser.add_argument('--input_dir', required=True)
     parser.add_argument('--save_dir', required=True, help='path to save checkpoints and logs')
     parser.add_argument('--glove_pt', required=False)
-    parser.add_argument('--ckpt', default='checkpoints/MetaQA/model_metaqa.pt')
+    parser.add_argument('--ckpt', default='checkpoint/MetaQA/model_metaqa.pt')
     # training parameters
     parser.add_argument('--lr', default=1e-3, type=float)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
@@ -92,7 +92,7 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/MetaQA'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/MetaQA'
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_test')
     if not os.path.exists(args.save_dir):

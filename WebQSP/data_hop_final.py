@@ -4,6 +4,7 @@ import pickle
 from collections import defaultdict
 # from transformers import AutoTokenizer
 from transformers import BertTokenizer, RobertaTokenizer
+from transformers import RobertaModel, BertModel
 from utils.misc import invert_dict
 # import sys
 # sys.path.append('Experiments')
@@ -44,33 +45,11 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class DataLoader(torch.utils.data.DataLoader):
-    def __init__(self, input_dir, fn, bert_name, ent2id, rel2id, batch_size, training=False):
+    def __init__(self, input_dir, fn, tokenizer, ent2id, rel2id, sub_map, batch_size, training=False):
         print('Reading questions from {}'.format(fn))
-        try:
-            if bert_name == "bert-base-uncased":
-                self.tokenizer = BertTokenizer.from_pretrained('/root/autodl-tmp/GFC/models/bert-base-uncased')
-            elif bert_name == "roberta-base":
-                self.tokenizer = RobertaTokenizer.from_pretrained('/root/autodl-tmp/GFC/models/roberta-base')
-            else:
-                raise ValueError("please input the right name of pretrained model")
-        except ValueError as e:
-            raise e
 
         self.ent2id = ent2id
         self.rel2id = rel2id
-        self.id2ent = invert_dict(ent2id)
-        self.id2rel = invert_dict(rel2id)
-
-        sub_map = defaultdict(list)
-        so_map = defaultdict(list)
-        for line in open(os.path.join(input_dir, 'fbwq_full/train.txt')):
-            l = line.strip().split('\t')
-            s = l[0].strip()
-            p = l[1].strip()
-            o = l[2].strip()
-            sub_map[s].append((p, o))
-            so_map[(s, o)].append(p)
-
 
         data = []
         for line in open(fn):
@@ -94,15 +73,14 @@ class DataLoader(torch.utils.data.DataLoader):
             ans = line[1].split('|')
             hop = int(line[2].strip())
 
-            entity_range = set()
+            entity_range = []
             for p, o in sub_map[head]:
-                entity_range.add(o)
+                entity_range.append(o)
                 for p2, o2 in sub_map[o]:
-                    entity_range.add(o2)
-            entity_range = [ent2id[o] for o in entity_range]
+                    entity_range.append(o2)
 
             head = [ent2id[head]]
-            question = self.tokenizer(question.strip(), max_length=64, padding='max_length', return_tensors="pt")
+            question = tokenizer(question.strip(), max_length=64, padding='max_length', return_tensors="pt")
             ans = [ent2id[a] for a in ans]
             data.append([head, question, ans, entity_range, hop])
 
@@ -118,40 +96,77 @@ class DataLoader(torch.utils.data.DataLoader):
             )
 
 
-def load_data(input_dir, bert_name, batch_size):
+def load_data(input_dir, bert_name, batch_size, device):
     cache_fn = os.path.join(input_dir, 'processed_hop_fixed.pt')
     if os.path.exists(cache_fn):
         print('Read from cache file: {} (NOTE: delete it if you modified data loading process)'.format(cache_fn))
         with open(cache_fn, 'rb') as fp:
-            ent2id, rel2id, triples, train_data, test_data = pickle.load(fp)
+            ent2id, rel2id, id2ent, id2rel, triples, sub_map, rel_emb, train_data, test_data = pickle.load(fp)
         print('Train number: {}, test number: {}'.format(len(train_data.dataset), len(test_data.dataset)))
     else:
         print('Read data...')
         ent2id = {}
+        id2ent = []
         for line in open(os.path.join(input_dir, 'fbwq_full/entities.dict')):
             l = line.strip().split('\t')
-            ent2id[l[0].strip()] = len(ent2id)
+            if l[0].strip() not in ent2id:
+                ent2id[l[0].strip()] = len(ent2id)
+                id2ent.append(l[0].strip())
+        print(len(ent2id), len(id2ent))
 
         rel2id = {}
+        id2rel = []
         for line in open(os.path.join(input_dir, 'fbwq_full/relations.dict')):
             l = line.strip().split('\t')
-            rel2id[l[0].strip()] = int(l[1])
+            if l[0].strip() not in rel2id:
+                rel2id[l[0].strip()] = len(rel2id)
+                id2rel.append(l[0].strip())
+        print(len(rel2id), len(id2rel))
 
         triples = []
+        sub_map = defaultdict(list)
+        so_map = defaultdict(list)
         for line in open(os.path.join(input_dir, 'fbwq_full/train.txt')):
             l = line.strip().split('\t')
             s = ent2id[l[0].strip()]
             p = rel2id[l[1].strip()]
             o = ent2id[l[2].strip()]
+            sub_map[s].append((p, o))
+            so_map[(s, o)].append(p)
             triples.append((s, p, o))
             p_rev = rel2id[l[1].strip()+'_reverse']
             triples.append((o, p_rev, s))
         triples = torch.LongTensor(triples)
 
-        train_data = DataLoader(input_dir, os.path.join(input_dir, 'qa_train_webqsp_hop.txt'), bert_name, ent2id, rel2id, batch_size, training=True)
-        test_data = DataLoader(input_dir, os.path.join(input_dir, 'qa_test_webqsp_fixed_hop.txt'), bert_name, ent2id, rel2id,
+        try:
+            if bert_name == "bert-base-uncased":
+                bert_encoder = BertModel.from_pretrained('/root/autodl-tmp/GFC/models/bert-base-uncased').to(device)
+                tokenizer = BertTokenizer.from_pretrained('/root/autodl-tmp/GFC/models/bert-base-uncased')
+            elif bert_name == "roberta-base":
+                bert_encoder = RobertaModel.from_pretrained('/root/autodl-tmp/GFC/models/roberta-base').to(device)
+                tokenizer = RobertaTokenizer.from_pretrained('/root/autodl-tmp/GFC/models/roberta-base')
+            else:
+                raise ValueError("please input the right name of pretrained model")
+        except ValueError as e:
+            raise e
+
+        rel_emb = []
+        batch_size = 32
+        for b in range(0, len(id2rel), batch_size):
+            # 获取当前批次的文本
+            batch_rels_text = id2rel[b:min(b+batch_size, len(id2rel))]
+            rels_token = tokenizer(batch_rels_text, max_length=64, padding='max_length', return_tensors="pt")
+            for param in bert_encoder.parameters():
+                param.requires_grad = False
+            embeddings = bert_encoder(**rels_token.to(device)).pooler_output# [num_relations, dim_h]
+            rel_emb.append(embeddings)
+        rel_emb = torch.cat(rel_emb, dim=0)
+        print(rel_emb.shape)
+
+        train_data = DataLoader(input_dir, os.path.join(input_dir, 'qa_train_webqsp_hop.txt'), tokenizer, ent2id, rel2id, sub_map, batch_size, training=True)
+        test_data = DataLoader(input_dir, os.path.join(input_dir, 'qa_test_webqsp_fixed_hop.txt'), tokenizer, ent2id, rel2id, sub_map,
                                batch_size)  # _fixed
         with open(cache_fn, 'wb') as fp:
-            pickle.dump((ent2id, rel2id, triples, train_data, test_data), fp)
+            pickle.dump((ent2id, rel2id, id2ent, id2rel, triples, sub_map, rel_emb, train_data, test_data), fp)
 
-    return ent2id, rel2id, triples, train_data, test_data
+    return ent2id, rel2id, id2ent, id2rel, triples, sub_map, rel_emb, train_data, test_data

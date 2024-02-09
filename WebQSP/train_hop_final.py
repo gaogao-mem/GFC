@@ -36,13 +36,14 @@ def train(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
     args.input_dir = '/root/autodl-tmp/GFC/data/WebQSP'
-    ent2id, rel2id, triples, train_loader, val_loader = load_data(args.input_dir, args.bert_name, args.batch_size)
+    ent2id, rel2id, id2ent, id2rel, triples, sub_map, rel_emb, train_loader, val_loader = load_data(args.input_dir, args.bert_name, args.batch_size, device)
     logging.info("Create model.........")
-    model = GFC(args, ent2id, rel2id, triples)
+    model = GFC(args, ent2id, rel2id, id2ent, id2rel, triples, sub_map, rel_emb)
     if not args.ckpt == None:
         model.load_state_dict(torch.load(args.ckpt))
     model = model.to(device)
     # model.triples = model.triples.to(device)
+    model.rel_emb = model.rel_emb.to(device)
     model.Msubj = model.Msubj.to(device)
     model.Mobj = model.Mobj.to(device)
     model.Mrel = model.Mrel.to(device)
@@ -131,21 +132,24 @@ def main():
     parser.add_argument('--ckpt', default=None)
     # training parameters
     parser.add_argument('--bert_lr', default=3e-5, type=float)
-    parser.add_argument('--lr', default=0.001, type=float)
+    parser.add_argument('--lr', default=0.1, type=float)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--num_epoch', default=81, type=int)
     parser.add_argument('--batch_size', default=16, type=int)
-    parser.add_argument('--seed', type=int, default=444, help='random seed')
+    parser.add_argument('--seed', type=int, default=42, help='random seed')
     parser.add_argument('--opt', default='radam', type=str)
     parser.add_argument('--warmup_proportion', default=0.05, type=float)
     # model parameters
     parser.add_argument('--bert_name', default='bert-base-uncased', choices=['roberta-base', 'bert-base-uncased'])
     parser.add_argument('--aux_hop', type=int, default=1, choices=[0, 1],
                         help='utilize question hop to constrain the probability of self relation')
+    parser.add_argument('--ent_act_thres', default=0.7, type=float, help='activate an entity when its score exceeds this value') # 0.9 may cause convergency issue
+    parser.add_argument('--max_active', default=400, type=int, help='max number of active path at each step')
+    
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/WebQSP'
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_train')
     if not os.path.exists(args.save_dir):

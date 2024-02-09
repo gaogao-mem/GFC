@@ -36,7 +36,7 @@ setproctitle.setproctitle("GFC_half_demo")
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.input_dir = '/root/autodl-tmp/GFC/data/WebQSP_half'
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP_half'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/WebQSP_half'
     args.ckpt = os.path.join(path_abs, args.ckpt)
     ent2id, rel2id, triples, train_loader, val_loader = load_data(args.input_dir, args.bert_name, args.batch_size)
     logging.info("Create model.........")
@@ -194,7 +194,7 @@ def main():
     # input and output
     parser.add_argument('--input_dir', required=True, help='path to the data')
     parser.add_argument('--save_dir', required=True, default=None, help='path to save checkpoints and logs')
-    parser.add_argument('--ckpt', default='checkpoints/WebQSP_half/model_wqsp_half.pt')
+    parser.add_argument('--ckpt', default='checkpoint/WebQSP_half/model_wqsp_half.pt')
     # training parameters
     parser.add_argument('--bert_lr', default=3e-5, type=float)
     parser.add_argument('--lr', default=0.001, type=float)
@@ -209,7 +209,7 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/WebQSP_half'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/WebQSP_half'
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_test')
     if not os.path.exists(args.save_dir):

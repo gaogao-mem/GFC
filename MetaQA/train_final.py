@@ -181,7 +181,7 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/MetaQA'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/MetaQA'
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_train')
     if not os.path.exists(args.save_dir):

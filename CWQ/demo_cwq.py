@@ -32,7 +32,7 @@ setproctitle.setproctitle("GFC_CWQ")
 def test(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args.input_dir = '/root/autodl-tmp/GFC/data/CWQ'
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/CWQ'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/CWQ'
     args.ckpt = os.path.join(path_abs, args.ckpt)
     ent2id, rel2id, train_loader, val_loader, test_loader = load_data(args.input_dir, args.bert_name, args.batch_size, args.rev)
     logging.info("Create model.........")
@@ -71,13 +71,13 @@ def test(args):
     logging.info('val acc: {:.4f}, test acc: {:.4f}'.format(val_acc, test_acc))
     # torch.save(model.state_dict(), os.path.join(args.save_dir, 'model-{}-{:.4f}.pt'.format(epoch, val_acc)))
 
-# python train_final.py --input_dir data/CWQ --save_dir checkpoints/CWQ --rev
+# python train_final.py --input_dir data/CWQ --save_dir checkpoint/CWQ --rev
 def main():
     parser = argparse.ArgumentParser()
     # input and output
     parser.add_argument('--input_dir', required=True, help='path to the data')
     parser.add_argument('--save_dir', required=True, help='path to save checkpoints and logs')
-    parser.add_argument('--ckpt', default='checkpoints/CWQ/model_cwq.pt')
+    parser.add_argument('--ckpt', default='checkpoint/CWQ/model_cwq.pt')
     # training parameters
     parser.add_argument('--bert_lr', default=3e-5, type=float)
     parser.add_argument('--lr', default=0.001, type=float)
@@ -95,7 +95,7 @@ def main():
     args = parser.parse_args()
 
     # make logging.info display into both shell and file
-    path_abs = '/root/autodl-tmp/GFC/checkpoints/CWQ'
+    path_abs = '/root/autodl-tmp/GFC/checkpoint/CWQ'
     time_ = time.strftime("%Y-%m-%d-%H:%M:%S", time.localtime())
     args.save_dir = os.path.join(path_abs, args.save_dir, time_+'_test')
     if not os.path.exists(args.save_dir):
