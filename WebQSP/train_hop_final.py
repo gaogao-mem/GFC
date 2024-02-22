@@ -132,11 +132,11 @@ def main():
     parser.add_argument('--ckpt', default=None)
     # training parameters
     parser.add_argument('--bert_lr', default=3e-5, type=float)
-    parser.add_argument('--lr', default=0.1, type=float)
+    parser.add_argument('--lr', default=0.001, type=float)
     parser.add_argument('--weight_decay', default=1e-5, type=float)
     parser.add_argument('--num_epoch', default=81, type=int)
     parser.add_argument('--batch_size', default=16, type=int)
-    parser.add_argument('--seed', type=int, default=42, help='random seed')
+    parser.add_argument('--seed', type=int, default=444, help='random seed')
     parser.add_argument('--opt', default='radam', type=str)
     parser.add_argument('--warmup_proportion', default=0.05, type=float)
     # model parameters

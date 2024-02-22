@@ -49,6 +49,15 @@ class GFC(nn.Module):
             # nn.Tanh()
         )
 
+        self.step_encoders = []
+        for i in range(self.num_steps):
+            m = nn.Sequential(
+                nn.Linear(dim_hidden, dim_hidden),
+                nn.Tanh(),
+            )
+            self.step_encoders.append(m)
+            self.add_module('step_encoders_{}'.format(i), m)
+
         self.high_way = nn.Sequential(
             nn.Linear(dim_hidden, dim_hidden),
             nn.Sigmoid()
@@ -117,11 +126,11 @@ class GFC(nn.Module):
             q_word_att = q_word_att * questions['attention_mask'].float().unsqueeze(1)  # [bsz, 1, max_q]*[bsz, max_q]
             q_word_att = q_word_att / (torch.sum(q_word_att, dim=2, keepdim=True) + 1e-6)  # [bsz, max_q, max_q]
             word_attns.append(q_word_att)  # bsz,1,q_max
+            #print('q_word_h_hop', q_word_h_hop, q_word_att)
             ctx_h = (q_word_h_hop.transpose(-1,-2) @ q_word_att.transpose(-1,-2)).squeeze(2)  # [bsz, dim_h, max_q] * [bsz, max_q,1]
-
             ctx_h_list.append(ctx_h)
 
-            r_stack = []
+            '''r_stack = []
             e_stack = []
             cnt_trunc = 0
             for i in range(bsz):
@@ -132,12 +141,6 @@ class GFC(nn.Module):
                 if len(e_idx) == 0:
                     # print('no active entity at step {}'.format(t))
                     e_idx = sort_idx[:50].tolist()
-                    '''for idx in sort_idx:
-                        idx = idx.item()
-                        if idx in self.sub_map:
-                            e_idx.append(idx)
-                            print('found one: ', idx)
-                            break'''
 
                 rels = []
                 pair = []
@@ -153,17 +156,9 @@ class GFC(nn.Module):
                         break
 
                 # print('rels: ', len(rels))
-                '''if len(rels) == 0:
-                    print('no active entity at step {}'.format(t))
-                    for idx in sort_idx:
-                        idx = idx.item()
-                        if idx in self.sub_map:
-                            for p, o in self.sub_map[idx]:
-                                rels.append(p)
-                                pair.append((idx, o))
-                                break'''
                 if len(rels) == 0:
                     e_stack.append(last_e[i])
+                    r_stack.append(torch.zeros(self.num_relations).to(device))
                     continue
 
                 rels = torch.LongTensor(rels).to(device)
@@ -172,19 +167,37 @@ class GFC(nn.Module):
                 # print('step {}, desc number {}'.format(t, len(rg)))
                 rels_embeddings = self.rel_emb[rels]
                 # print('rels_embedding', rels_embeddings.shape, len(rels))
+                print('ctx_h: ', ctx_h[i:i+1])
+                print(self.rel_classifier1(ctx_h[i:i+1] * rels_embeddings))
                 d_logit = self.rel_classifier1(ctx_h[i:i+1] * rels_embeddings).squeeze(1) # [rsz,]
-                d_prob = torch.sigmoid(d_logit) # [rsz,]
+                print('d_logit: ', d_logit)
+                d_prob = torch.clamp(torch.sigmoid(d_logit), min=1e-8, max=1 - 1e-8) # [rsz,]
                 # print('d_prob:', torch.sum(d_prob), d_prob)
                 e_stack.append(self.newfollow(last_e[i], pair, d_prob))  # [Esize]
 
-                '''# expand rsz to all relations
+                # expand rsz to all relations
+            
+                rels=torch.tensor([1,1,2,3,4,4,6])
+                prob=torch.tensor([0.2, 0.4, 0.3, 0.4, 0.2, 0.2, 0.6])
+                x=torch.bincount(rels, weights=prob, minlength = 10)
+                tensor([0.0000, 0.6000, 0.3000, 0.4000, 0.4000, 0.0000, 0.6000, 0.0000, 0.0000, 0.0000])
+                y= torch.index_add(torch.zeros(10), 0, unique_rels, rel_counts.float())
+                y[y==0]=1
+                tensor([1., 2., 1., 1., 2., 1., 1., 1., 1., 1.])
+                x/y
+                tensor([0.0000, 0.3000, 0.3000, 0.4000, 0.2000, 0.0000, 0.6000, 0.0000, 0.0000, 0.0000])
+                
+                x = torch.bincount(rels, weights=d_prob, minlength=self.num_relations) # [num_relations,]
+                y = torch.index_add(torch.zeros(self.num_relations).to(device), 0, rels, d_prob) # [num_relations,]
+                y[y==0] = 1
+                rel_prob = x / y
                 rel_prob = torch.index_add(torch.zeros(self.num_relations).to(device), 0, rels, d_prob) # [num_relations,]
                 print('d_prob', d_prob.shape, d_prob[0], 'rel_prob: ', rel_prob.shape, rel_prob[rels[0]])
                 print(rels)
                 print(d_prob)
                 print(rel_prob)
                 # transfer probability
-                r_stack.append(rel_prob)'''
+                r_stack.append(rel_prob)
                 
                 if not self.training:
                     rels_text = [self.id2rel[idx] for idx in rels]
@@ -198,13 +211,17 @@ class GFC(nn.Module):
                         act_idx = []
                     path_infos[i][t] = [(pair[_][0], rels_text[_], pair[_][1]) for _ in act_idx]
 
-            '''r_stack = torch.stack(r_stack, dim=0)  # [bsz, num_relations]
+            r_stack = torch.stack(r_stack, dim=0)  # [bsz, num_relations]
             print("r_stack ", r_stack.shape)'''
 
-            '''last_e1 = self.follow(last_e, r_stack)  # faster than index_add [bsz, num_ent]
-            print("last_e1 ", last_e1.shape)'''
-            last_e = torch.stack(e_stack, dim=0)
-            # print("last_e2 ", last_e.shape)
+            rel_logit = self.rel_classifier2(ctx_h) # [bsz, num_relations]
+            rel_dist = torch.sigmoid(rel_logit)
+            rel_probs.append(rel_dist)
+
+            last_e = self.follow(last_e, rel_dist)  # faster than index_add [bsz, num_ent]
+            #print("last_e1 ", last_e.shape)
+            '''last_e = torch.stack(e_stack, dim=0)
+            # print("last_e2 ", last_e.shape)'''
             '''# whether last_e is the same with last_e2
             print('the same?: ',torch.sum(torch.abs(last_e1 - last_e2)))'''
 
@@ -238,9 +255,9 @@ class GFC(nn.Module):
             '''weight = answers * 99 + 1 
             print(torch.sum(entity_range * weight))
             loss = torch.sum(entity_range * weight * torch.pow(last_e - answers, 2)) / torch.sum(entity_range * weight)
-            '''
+            print(loss)'''
             weight = answers * 999 + 1
             loss = torch.mean(weight * torch.pow(last_e - answers, 2))
-            # print(loss)
+            print(loss)
 
             return {'loss': loss}
